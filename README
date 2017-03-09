@@ -1,15 +1,22 @@
-====== Multi-Threaded GZip by neoe  ======
+======  MtZip : Multi-Threaded GZip by neoe  ======
+Story:
+Nowadays, We have multi-core CPU and random access SSD. Both are good at multi-threaded access.
+Compression algorithms are not deal well with multi-thread.
+But, When we compress many files, we still can do them multi-threaded for better performance.
+Here comes the MtZip.
 
-GUI:
 
+
+Usage of mtzip.cmd:
+ create archive: c <src-dir> <dest> <file-worker-cnt> <encode-worker-cnt>
+ extract archive: x <src> <dest-dir>
+ test archive: t <file>
+ join archives(optional): j <file>
+ create archive and join(c and j): cj <src-dir> <dest> <file-worker-cnt> <encode-worker-cnt>
+
+Other Uasages, GUI:
 java -Xmx1000M -cp dist/MtZip.jar neoe.mz.EncoderUI
 java -Xmx1000M -cp dist/MtZip.jar neoe.mz.DecoderUI
-
-Command-Line:
-
-java -Xmx1000M -cp dist/MtZip.jar neoe.mz.mgzEncoder <src-dir> <dest> <file-worker-cnt> <encode-worker-cnt> 
-java -Xmx1000M -cp dist/MtZip.jar neoe.mz.mgzDecoder <src> <dest-dir>
-java -Xmx1000M -cp dist/MtZip.jar neoe.mz.Checkmgz <mgz-file>
 
 eg.
 
@@ -19,16 +26,21 @@ will generate 4 files like:
  72,207,596 linux-4.4.39.mz.-1
  58,594,954 linux-4.4.39.mz.-2
  49,795,940 linux-4.4.39.mz.-3
-> mtzip x linux-4.4.39.mz 
+> mtzip x linux-4.4.39.mz
 will extract the 4 archives.
 > mtzip j linux-4.4.39.mz
 will concat 4 files to one like(totally optional):
  270,858,445 linux-4.4.39.mz
 
-Q:Why don't concat files to one large file?
-A:concating large files will cost much on disk and time when size for large. so keep it in seperated files by default.
-  If you mean to get one result file, use 'j' command 
+Q:Why don't concat result files into one large file?
+A:concating large files will cost much on disk and time. So keep them in seperated files by default.
+  If you mean to get one file, use 'j' or 'cj' command instead of 'c'
 
+Q: Why use GZIP over XZ or others methods?
+A: This tool expected to be fast. GZIP is balanced, maybe the best choice after I compared with others.
 
+Q: How many part should I divede?
+A: As many as your CPU's logic cores numbers I think.
+Notice: If we compress in N parts, we can decompress in N parts defaultly and maxinum.
 
 
