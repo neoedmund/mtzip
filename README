@@ -1,0 +1,34 @@
+====== Multi-Threaded GZip by neoe  ======
+
+GUI:
+
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.EncoderUI
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.DecoderUI
+
+Command-Line:
+
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.mgzEncoder <src-dir> <dest> <file-worker-cnt> <encode-worker-cnt> 
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.mgzDecoder <src> <dest-dir>
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.Checkmgz <mgz-file>
+
+eg.
+
+> mtzip c linux-4.4.39-src linux-4.4.39 4 4
+will generate 4 files like:
+ 90,353,309 linux-4.4.39.mz.-0
+ 72,207,596 linux-4.4.39.mz.-1
+ 58,594,954 linux-4.4.39.mz.-2
+ 49,795,940 linux-4.4.39.mz.-3
+> mtzip x linux-4.4.39.mz 
+will extract the 4 archives.
+> mtzip j linux-4.4.39.mz
+will concat 4 files to one like(totally optional):
+ 270,858,445 linux-4.4.39.mz
+
+Q:Why don't concat files to one large file?
+A:concating large files will cost much on disk and time when size for large. so keep it in seperated files by default.
+  If you mean to get one result file, use 'j' command 
+
+
+
+

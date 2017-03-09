@@ -1,0 +1,10 @@
+{ /* neoebuild script */
+baseDir:"."
+prjs:[
+
+ [mtzip "." {	main:"neoe.mz.Console" }]
+]
+target:7
+source:7
+}
+
