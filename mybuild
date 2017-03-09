@@ -2,7 +2,7 @@
 baseDir:"."
 prjs:[
 
- [mtzip "." {	main:"neoe.mz.Console" }]
+ [mtzip "." {	main:"neoe.mz.Console", cp :["../mxz/binary/xz.jar"] }]
 ]
 target:7
 source:7

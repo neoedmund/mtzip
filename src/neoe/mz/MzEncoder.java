@@ -67,7 +67,7 @@ public class MzEncoder {
 					fileWorkerCnt, encodeWorkerCnt));
 			timeStart = System.currentTimeMillis();
 			deleteTargetFiles(fn);
-			WorkRoom encodeRoom = new WorkRoom(encodeWorkerCnt, EncodeWorker.class, 1, "EncodeRoom",
+			WorkRoom encodeRoom = new WorkRoom(encodeWorkerCnt, EncodeWorkerXZ.class, 1, "EncodeRoom",
 					new Object[] { fn, this });
 			WorkRoom fileRoom = new WorkRoom(fileWorkerCnt, FileWorker.class, 300, "FileRoom",
 					new Object[] { encodeRoom, BLOCK_SIZE });

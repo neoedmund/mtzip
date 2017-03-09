@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
+
+import org.tukaani.xz.XZInputStream;
 
 import neoe.util.U;
 
@@ -153,7 +154,7 @@ public class MzDecoder {
 
 	private void readSingleArchive(InputStream fin, int ti) throws IOException {
 		archive++;
-		DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(fin, 1024 * 1024 * 8)));
+		DataInputStream in = new DataInputStream(new XZInputStream(new BufferedInputStream(fin, 1024 * 1024 * 8)));
 		try {
 			while (true) {
 				while (pause) {

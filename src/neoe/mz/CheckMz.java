@@ -8,7 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
+
+import org.tukaani.xz.XZInputStream;
 
 import neoe.util.U;
 
@@ -124,7 +125,7 @@ public class CheckMz {
 
 	private void readSingleArchive(InputStream fin) throws IOException {
 		archive++;
-		DataInputStream in = new DataInputStream(new GZIPInputStream(fin));
+		DataInputStream in = new DataInputStream(new XZInputStream(fin));
 		try {
 			while (true) {
 				byte type = in.readByte();
