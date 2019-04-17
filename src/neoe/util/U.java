@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.text.DecimalFormat;
+import java.util.Map;
 
 public class U {
 	public static void sleep(int i) {
@@ -142,5 +143,25 @@ public class U {
 			dir.mkdirs();
 		}
 		return dir;
+	}
+
+	private static int long2size(long v) {
+		if (v < 0)
+			throw new RuntimeException("expect value large then zero:" + v);
+		if (v >= Integer.MAX_VALUE)
+			throw new RuntimeException("long value too large:" + v);
+		return (int) v;
+	}
+
+	public static void writeFileMem(DataInputStream in, long size, long start, long len, Map<String, byte[]> m,
+			String name) throws IOException {
+		byte[] bs = m.computeIfAbsent(name, anything -> new byte[long2size(size)]);
+		in.readFully(bs, long2size(start), long2size(len));
+	}
+
+	public static void writeFileMem(DataInputStream in, long size, Map<String, byte[]> m, String name)
+			throws IOException {
+		byte[] bs = m.computeIfAbsent(name, anything -> new byte[long2size(size)]);
+		in.readFully(bs, 0, long2size(size));
 	}
 }
