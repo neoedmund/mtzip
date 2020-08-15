@@ -57,12 +57,12 @@ public class Copyer {
 			totalBytes = 0;
 			for (File f : fi) {
 				if (Files.isSymbolicLink(f.toPath())) {
-					debug("skip SymbolicLink:" + f.getAbsolutePath());
+					debug("skip SymbolicLink:" + f.getAbsolutePath());// FIXME links are some relative some absolutely
 					continue;
 				}
 				String fname = f.getCanonicalPath();
 				if (!fname.startsWith(baseDir)) {
-					debug("skip Strange Path:" + fname);
+					debug("skip Strange Path:" + fname); // FIXME hard links
 					continue;
 				}
 				String relpath = fname.substring(baseDir.length());

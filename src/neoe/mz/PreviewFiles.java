@@ -21,6 +21,8 @@ public class PreviewFiles {
 	public boolean finished;
 	public int totalDir = 0;
 	public int totalFile = 0;
+	public int totalSoftLink = 0;
+	public int totalHardLink = 0;
 	public long totalBytes = 0;
 
 	public synchronized long getTotalBytes() {
@@ -39,12 +41,13 @@ public class PreviewFiles {
 
 		for (File f : fi) {
 			if (Files.isSymbolicLink(f.toPath())) {
-				U.debug("skip SymbolicLink:" + f.getAbsolutePath());
+				totalSoftLink++;
 				continue;
 			}
 			String fname = f.getCanonicalPath();
 			if (!fname.startsWith(baseDir)) {
-				U.debug("skip Strange Path:" + fname);
+				// shoulb be hard link
+				totalHardLink++;
 				continue;
 			}
 			// String relpath = fname.substring(baseDir.length());
@@ -59,9 +62,9 @@ public class PreviewFiles {
 
 		long used = System.currentTimeMillis() - t1;
 		System.out.println("scan finished in " + used + " ms. dirs:" + totalDir + ", files:" + totalFile + ", bytes:"
-				+ totalBytes);
+				+ totalBytes + " , soft links:" + totalSoftLink + " , hard links:" + totalHardLink);
 		finished = true;
-		return new Object[] { totalDir, totalFile, totalBytes };
+		return new Object[] { totalDir, totalFile, totalBytes, totalSoftLink, totalHardLink };
 
 	}
 }

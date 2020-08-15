@@ -7,8 +7,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import neoe.util.U;
@@ -24,12 +31,14 @@ public class MzDecoder {
 
 	}
 
-	long totalfile = 0, totaldir = 0, totalpartfile = 0, totalbs = 0, archive = 0;
+	long totalfile, totaldir, totalpartfile, totalbs, archive, totalSoftLink, totalHardLink;
 	private File dir;
 	boolean finished;
 	protected String extraFn;
 	long t1;
 	boolean pause;
+	List links = Collections.synchronizedList(new ArrayList());
+	List dirTimes = Collections.synchronizedList(new ArrayList());
 
 	public void run(String fn, final String outDir) throws Exception {
 		try {
@@ -72,6 +81,58 @@ public class MzDecoder {
 				}
 
 			}
+			if (!links.isEmpty()) {
+				System.out.printf("creating %,d links\n", links.size());
+				links.sort(new Comparator() {
+					@Override
+					public int compare(Object o1, Object o2) {
+						Object[] r1 = (Object[]) o1;
+						Object[] r2 = (Object[]) o2;
+						return ((String) r1[0]).compareTo((String) r2[0]);
+					}
+				});
+				Set<File> dirs = new HashSet<>();
+				int real = 0;
+				for (Object o : links) {
+					Object[] r = (Object[]) o;
+					System.out.println("[d]" + r[0] + " => " + r[1]);
+					File f2 = new File(dir, (String) r[0]);
+					if (f2.exists())
+						continue;
+					File dir = f2.getParentFile();
+					if (!dirs.contains(dir)) {
+						dir.mkdirs();
+						dirs.add(dir);
+					}
+					try {
+						Files.createSymbolicLink(f2.toPath(), Path.of((String) r[1]));
+						// FileInfo.setAttr(f2, (String) r[2]);
+						f2.setLastModified((long) r[3]);
+					} catch (Exception ex) {
+						System.err.println("[e]" + r[0] + " => " + r[1] + ", ex=" + ex);
+					}
+					real++;
+				}
+				System.out.printf("created %,d links\n", real);
+			}
+			if (!dirTimes.isEmpty()) {
+				System.out.println("setting dir timestamps:" + dirTimes.size());
+				dirTimes.sort(new Comparator() {
+					@Override
+					public int compare(Object o1, Object o2) {
+						Object[] r1 = (Object[]) o1;
+						Object[] r2 = (Object[]) o2;
+						return -((File) r1[0]).compareTo((File) r2[0]);// reverse, sub first?
+					}
+				});
+				for (Object o : dirTimes) {
+					Object[] r = (Object[]) o;
+					File f2 = (File) r[0];
+					long ts = (long) r[1];
+					f2.setLastModified(ts);
+					// System.out.printf("set %s time to %s\n", f2.getAbsoluteFile(), new Date(ts));
+				}
+			}
 		} finally {
 			finished = true;
 		}
@@ -95,9 +156,9 @@ public class MzDecoder {
 			System.out.println("unknow file sig '" + sig + "', seems not a MXZ file.");
 		}
 		fin.close();
-		System.out.println(
-				String.format("end. total file:%d, total dir:%d, total bytes:%d, total part-file:%d, archive:%d",
-						totalfile, totaldir, totalbs, totalpartfile, archive));
+		System.out.println(String.format(
+				"end. total file:%,d, total dir:%,d, total bytes:%,d, total part-file:%,d, soft link:%,d, hard links:%,d , archive:%d",
+				totalfile, totaldir, totalbs, totalpartfile, totalSoftLink, totalHardLink, archive));
 
 	}
 
@@ -164,12 +225,16 @@ public class MzDecoder {
 					}
 				}
 				byte type = in.readByte();
-				if (type == 0) {
+				if (type == 0) {// single file
 					String name = in.readUTF();
 					extraFn = name;
 					long size = in.readLong();
-					U.writeFile(in, size, dir, name);
-					System.out.printf("[%d]%s\n", ti, name);
+					String attr = in.readUTF();
+					long time = in.readLong();
+					File f = U.writeFile(in, size, dir, name);
+					FileInfo.setAttr(f, attr);
+					f.setLastModified(time);
+//					System.out.printf("[%d]%s\n", ti, name);
 					totalfile++;
 					totalbs += size;
 				} else if (type == 1) {
@@ -178,18 +243,58 @@ public class MzDecoder {
 					long size = in.readLong();
 					long start = in.readLong();
 					long len = in.readLong();
-					U.writeFile(in, size, start, len, dir, name);
+					String attr = null;
+					long time = 0;
+					if (start == 0) {
+						attr = in.readUTF();
+						time = in.readLong();
+					}
+					File f = U.writeFile(in, size, start, len, dir, name);
+					if (start == 0) {
+						FileInfo.setAttr(f, attr);
+						f.setLastModified(time);
+					}
 					totalbs += len;
 					totalpartfile++;
 					if (start == 0) {
 						System.out.println(name + "(+)");
 						totalfile++;
 					}
-				} else if (type == 2) {
+				} else if (type == 2) {// dir
 					String name = in.readUTF();
+					String attr = in.readUTF();
+					long time = in.readLong();
 					extraFn = name;
-					new File(dir, name).mkdirs();
+					File f = new File(dir, name);
+					f.mkdirs();
+					FileInfo.setAttr(f, attr);
+					dirTimes.add(new Object[] { f, time });
+					// f.setLastModified(time);//it will be set if sub is set?
+					// System.out.printf("[d]set %s time to %s\n", f.getAbsoluteFile(), new
+					// Date(time));
 					totaldir++;
+				} else if (type == 3) {// soft
+					String name = in.readUTF();
+					String link = in.readUTF();
+					String attr = in.readUTF();
+					long time = in.readLong();
+					links.add(new Object[] { name, link, attr, time });
+					totalSoftLink++;
+				} else if (type == 4) {// hard
+					String name = in.readUTF();
+					String link = in.readUTF();
+					String attr = in.readUTF();
+					long time = in.readLong();
+					boolean hardLinkIsBroken = true;
+					if (hardLinkIsBroken) {
+						links.add(new Object[] { name, link, attr, time });
+					} else {
+						System.err.printf("[d][x]%s => %s\n", name, link);
+						File f = new File(dir, name);
+						f.getParentFile().mkdirs();
+						Files.createLink(f.toPath(), Path.of(link));
+					}
+					totalHardLink++;
 				} else if (type == -1) {
 					System.out.println("end of archive");
 					break;

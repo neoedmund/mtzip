@@ -1,2 +1,1 @@
-java -Xmx1000M -cp dist/MtZip.jar neoe.mz.DecoderUI
-pause
+java -Xmx1000M -cp dist/mtzip.jar neoe.mz.DecoderUI

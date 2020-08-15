@@ -32,6 +32,7 @@ public class MzEncoder {
 	public boolean finished;
 	private long totalBytes, doneBytes;
 	public int totalFile;
+	public int totalSoftLink, totalHardLink;
 	public int totalDir;
 	public long timeStart;
 	private final Object lock1 = new Object();
@@ -80,17 +81,26 @@ public class MzEncoder {
 			totalBytes = 0;
 			for (File f : fi) {
 				if (Files.isSymbolicLink(f.toPath())) {
-					debug("skip SymbolicLink:" + f.getAbsolutePath());
+					String relpath = f.getParentFile().getCanonicalPath().substring(baseDir.length()) + "/"
+							+ f.getName();
+					fileRoom.submit(new FileInfo(3, f, 0, relpath));
+					totalSoftLink++;
 					continue;
 				}
 				String fname = f.getCanonicalPath();
+				String relpath = isSingleFile ? f.getName() : fname.substring(baseDir.length());
+
 				if (!fname.startsWith(baseDir)) {
-					debug("skip Strange Path:" + fname);
+					// hard link
+					String relpath2 = f.getParentFile().getCanonicalPath().substring(baseDir.length()) + "/"
+							+ f.getName();
+					fileRoom.submit(new FileInfo(4, f, 0, relpath2));
+					totalHardLink++;
 					continue;
 				}
-				String relpath = isSingleFile ? f.getName() : fname.substring(baseDir.length());
+
 				if (f.isDirectory()) {
-					fileRoom.submit(new FileInfo(2, relpath));
+					fileRoom.submit(new FileInfo(2, f, relpath));
 					totalDir++;
 					continue;
 				}
@@ -118,8 +128,8 @@ public class MzEncoder {
 			encodeRoom.waitFinish();
 
 			long used = System.currentTimeMillis() - timeStart;
-			System.out.println(
-					"finish in " + used + " ms. dirs:" + totalDir + ", files:" + totalFile + ", bytes:" + totalBytes);
+			System.out.printf("finish in %,d ms. dirs: %,d, files: %,d, bytes: %,d, soft links: %,d, hard links: %,d\n",
+					used, totalDir, totalFile, totalBytes, totalSoftLink, totalHardLink);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {

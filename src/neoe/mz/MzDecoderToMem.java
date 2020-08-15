@@ -191,7 +191,6 @@ public class MzDecoderToMem {
 				} else if (type == 2) {
 					String name = in.readUTF();
 					extraFn = name;
-					//new File(dir, name).mkdirs();
 					totaldir++;
 				} else if (type == -1) {
 					System.out.println("end of archive");

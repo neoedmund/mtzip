@@ -82,7 +82,7 @@ public class U {
 		return v + "%";
 	}
 
-	public static void writeFile(DataInputStream in, long size, File dir, String name) throws IOException {
+	public static File writeFile(DataInputStream in, long size, File dir, String name) throws IOException {
 		File f = new File(dir, name);
 		U.confirmDir(f);
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
@@ -103,17 +103,22 @@ public class U {
 			len -= r;
 		}
 		out.close();
+		return f;
 	}
 
-	public static void writeFile(DataInputStream in, long size, long start, long len, File dir, String name)
+	public static File writeFile(DataInputStream in, long size, long start, long len, File dir, String name)
 			throws IOException {
 		File f = new File(dir, name);
 		RandomAccessFile f1;
+		long time = 0;
 		if (!f.exists()) {
 			U.confirmDir(f);
 			f1 = new RandomAccessFile(f, "rw");
 			f1.setLength(size);
 		} else {
+			if (start == 0) {
+				time = f.lastModified();
+			}
 			f1 = new RandomAccessFile(f, "rw");
 		}
 		f1.seek(start);
@@ -133,6 +138,10 @@ public class U {
 			len -= r;
 		}
 		f1.close();
+		if (start == 0) {
+			f.setLastModified(time);
+		}
+		return f;
 	}
 
 	public static File confirmDir(File f) {
@@ -140,7 +149,9 @@ public class U {
 		if (dir == null) {
 			dir = new File(".");
 		} else {
-			dir.mkdirs();
+			if (!dir.exists()) {
+				dir.mkdirs();
+			}
 		}
 		return dir;
 	}

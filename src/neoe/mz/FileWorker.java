@@ -2,6 +2,8 @@ package neoe.mz;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.nio.file.Files;
 
 import neoe.util.U;
 import neoe.util.WorkRoom;
@@ -44,6 +46,8 @@ public class FileWorker extends GeneralWorker implements IWorker {
 			dos.writeByte(f.type);
 			dos.writeUTF(f.pathname);
 			dos.writeLong(f.fsize);
+			dos.writeUTF(FileInfo.getAttr(f.f));
+			dos.writeLong(f.f.lastModified());
 			U.read(f.f, dos, (int) f.fsize);
 			// System.out.println("0:"+ba.size());
 		} else if (f.type == 1) {// part file
@@ -52,12 +56,34 @@ public class FileWorker extends GeneralWorker implements IWorker {
 			dos.writeLong(f.fsize);
 			dos.writeLong(f.start);
 			dos.writeLong(f.len);
+			if (f.start == 0) {
+				dos.writeUTF(FileInfo.getAttr(f.f));
+				dos.writeLong(f.f.lastModified());
+			}
 			U.read(f.f, dos, (int) f.fsize, f.start, (int) f.len);
 			// System.out.println("1:"+ba.size());
 		} else if (f.type == 2) {// dir
 			dos.writeByte(f.type);
 			dos.writeUTF(f.pathname);
+			dos.writeUTF(FileInfo.getAttr(f.f));
+			dos.writeLong(f.f.lastModified());
 			// System.out.println("2:"+ba.size());
+		} else if (f.type == 3) { // soft link
+			dos.writeByte(f.type);
+			String s1, s2;
+			dos.writeUTF(s1 = f.pathname);
+			dos.writeUTF(s2 = Files.readSymbolicLink(f.f.toPath()).toString());
+			dos.writeUTF(FileInfo.getAttr(f.f));
+			dos.writeLong(f.f.lastModified());
+//			System.out.printf("[d][softlink]%s -> %s\n", s1, s2);
+		} else if (f.type == 4) { // hard link
+			dos.writeByte(f.type);
+			String s1, s2;
+			dos.writeUTF(s1 = f.pathname);
+			dos.writeUTF(s2 = f.f.getCanonicalPath());
+			dos.writeUTF(FileInfo.getAttr(f.f));
+			dos.writeLong(f.f.lastModified());
+//			System.out.printf("[d][hardlink]%s -> %s\n", s1, s2);
 		} else {
 			U.bug();
 		}
