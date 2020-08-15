@@ -26,6 +26,8 @@ public class FileInfo {
 	}
 
 	public static void setAttr(File f, String attr) throws IOException {
+		if (C.isWindows)
+			return;
 		Files.setPosixFilePermissions(f.toPath(), PosixFilePermissions.fromString(attr));
 	}
 
