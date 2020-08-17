@@ -51,7 +51,7 @@ public class Copyer {
 					new Object[] { copyRoom });
 
 			FileIterator fi = new FileIterator(dir, null);
-			String baseDir = new File(dir).getCanonicalPath();
+			String baseDir = new File(dir).getAbsolutePath();
 			totalDir = 0;
 			totalFile = 0;
 			totalBytes = 0;
@@ -60,7 +60,7 @@ public class Copyer {
 					debug("skip SymbolicLink:" + f.getAbsolutePath());// FIXME links are some relative some absolutely
 					continue;
 				}
-				String fname = f.getCanonicalPath();
+				String fname = f.getAbsolutePath();
 				if (!fname.startsWith(baseDir)) {
 					debug("skip Strange Path:" + fname); // FIXME hard links
 					continue;

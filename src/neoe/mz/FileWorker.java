@@ -80,7 +80,7 @@ public class FileWorker extends GeneralWorker implements IWorker {
 			dos.writeByte(f.type);
 			String s1, s2;
 			dos.writeUTF(s1 = f.pathname);
-			dos.writeUTF(s2 = f.f.getCanonicalPath());
+			dos.writeUTF(s2 = f.f.getAbsolutePath());
 			dos.writeUTF(FileInfo.getAttr(f.f));
 			dos.writeLong(f.f.lastModified());
 //			System.out.printf("[d][hardlink]%s -> %s\n", s1, s2);

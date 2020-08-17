@@ -74,25 +74,25 @@ public class MzEncoder {
 					new Object[] { encodeRoom, BLOCK_SIZE });
 
 			FileIterator fi = new FileIterator(dir, null);
-			String baseDir = new File(dir).getCanonicalPath();
+			String baseDir = new File(dir).getAbsolutePath();
 			boolean isSingleFile = new File(dir).isFile();
 			totalDir = 0;
 			totalFile = 0;
 			totalBytes = 0;
 			for (File f : fi) {
 				if (Files.isSymbolicLink(f.toPath())) {
-					String relpath = f.getParentFile().getCanonicalPath().substring(baseDir.length()) + "/"
+					String relpath = f.getParentFile().getAbsolutePath().substring(baseDir.length()) + "/"
 							+ f.getName();
 					fileRoom.submit(new FileInfo(3, f, 0, relpath));
 					totalSoftLink++;
 					continue;
 				}
-				String fname = f.getCanonicalPath();
+				String fname = f.getAbsolutePath();
 				String relpath = isSingleFile ? f.getName() : fname.substring(baseDir.length());
 
 				if (!fname.startsWith(baseDir)) {
 					// hard link
-					String relpath2 = f.getParentFile().getCanonicalPath().substring(baseDir.length()) + "/"
+					String relpath2 = f.getParentFile().getAbsolutePath().substring(baseDir.length()) + "/"
 							+ f.getName();
 					fileRoom.submit(new FileInfo(4, f, 0, relpath2));
 					totalHardLink++;

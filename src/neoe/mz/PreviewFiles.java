@@ -37,14 +37,14 @@ public class PreviewFiles {
 		System.out.println("scanning " + dir);
 		long t1 = System.currentTimeMillis();
 		FileIterator fi = new FileIterator(dir, null);
-		String baseDir = new File(dir).getCanonicalPath();
+		String baseDir = new File(dir).getAbsolutePath();
 
 		for (File f : fi) {
 			if (Files.isSymbolicLink(f.toPath())) {
 				totalSoftLink++;
 				continue;
 			}
-			String fname = f.getCanonicalPath();
+			String fname = f.getAbsolutePath();
 			if (!fname.startsWith(baseDir)) {
 				// shoulb be hard link
 				totalHardLink++;
