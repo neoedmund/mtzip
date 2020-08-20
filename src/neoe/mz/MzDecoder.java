@@ -50,6 +50,7 @@ public class MzDecoder {
 				String name2 = name + ".-";
 				File dir = U.confirmDir(f);
 				File[] fs = dir.listFiles();
+				Exception[] err = new Exception[1];
 				if (fs != null) {
 					List<Thread> ts = new ArrayList<Thread>();
 					int i = 0;
@@ -64,6 +65,7 @@ public class MzDecoder {
 										run0(fxname, outDir);
 									} catch (IOException e) {
 										e.printStackTrace();
+										err[0] = e;
 									}
 								}
 							});
@@ -76,6 +78,9 @@ public class MzDecoder {
 					} else {
 						for (Thread t : ts) {
 							t.join();
+						}
+						if (err[0] != null) {
+							throw new RuntimeException("something wrong:", err[0]);
 						}
 					}
 				}
