@@ -132,6 +132,8 @@ public class CheckMz {
 					String name = in.readUTF();
 					extraFn = name;
 					long size = in.readLong();
+					String attr = in.readUTF();
+					long time = in.readLong();
 					U.safeskip(in, size);
 					System.out.println(name);
 					totalfile++;
@@ -142,6 +144,10 @@ public class CheckMz {
 					long size = in.readLong();
 					long start = in.readLong();
 					long len = in.readLong();
+					if (start == 0) {
+						String attr = in.readUTF();
+						long time = in.readLong();
+					}
 					U.safeskip(in, len);
 					totalbs += len;
 					totalpartfile++;
@@ -151,8 +157,19 @@ public class CheckMz {
 					}
 				} else if (type == 2) {
 					String name = in.readUTF();
+					String attr = in.readUTF();
+					long time = in.readLong();
 					extraFn = name;
 					totaldir++;
+				} else if (type == 3) {// soft
+					String name = in.readUTF();
+					String link = in.readUTF();
+					String attr = in.readUTF();
+					long time = in.readLong();
+				} else if (type == 4) {// hard
+					String name = in.readUTF();
+					String link = in.readUTF();
+					String attr = in.readUTF();
 				} else if (type == -1) {
 					System.out.println("end of archive");
 					break;
