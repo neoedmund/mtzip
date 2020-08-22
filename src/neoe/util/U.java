@@ -68,9 +68,6 @@ public class U {
 		in.close();
 	}
 
-	public static void debug(String msg) {
-		System.out.println(msg);
-	}
 
 	public static String numberStr(long v) {
 		DecimalFormat formatter = new DecimalFormat("#,###");

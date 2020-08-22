@@ -66,9 +66,6 @@ public class WorkRoom {
 		}
 	}
 
-	private void debug(String m) {
-		System.out.println(m);
-	}
 
 	public void close() {
 		for (int i = 0; i < workerCnt; i++) {

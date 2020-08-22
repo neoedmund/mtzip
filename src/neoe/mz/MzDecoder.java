@@ -12,10 +12,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 import neoe.util.U;
@@ -31,7 +31,9 @@ public class MzDecoder {
 
 	}
 
-	long totalfile, totaldir, totalpartfile, totalbs, archive, totalSoftLink, totalHardLink;
+	AtomicLong totalfile = new AtomicLong(0), totaldir = new AtomicLong(0), totalpartfile = new AtomicLong(0),
+			totalbs = new AtomicLong(0), archive = new AtomicLong(0), totalSoftLink = new AtomicLong(0),
+			totalHardLink = new AtomicLong(0);
 	private File dir;
 	boolean finished;
 	protected String extraFn;
@@ -100,7 +102,7 @@ public class MzDecoder {
 				int real = 0;
 				for (Object o : links) {
 					Object[] r = (Object[]) o;
-					System.out.println("[d]" + r[0] + " => " + r[1]);
+//					System.out.println("[d]" + r[0] + " => " + r[1]);
 					File f2 = new File(dir, (String) r[0]);
 					if (f2.exists())
 						continue;
@@ -162,8 +164,9 @@ public class MzDecoder {
 		}
 		fin.close();
 		System.out.println(String.format(
-				"end. total file:%,d, total dir:%,d, total bytes:%,d, total part-file:%,d, soft link:%,d, hard links:%,d , archive:%d",
-				totalfile, totaldir, totalbs, totalpartfile, totalSoftLink, totalHardLink, archive));
+				"end. total file:%,d, total dir:%,d, total bytes:%,d, total part-file:%,d, soft link:%,d, hard links:%,d , archive:%,d",
+				totalfile.longValue(), totaldir.longValue(), totalbs.longValue(), totalpartfile.longValue(),
+				totalSoftLink.longValue(), totalHardLink.longValue(), archive.longValue()));
 
 	}
 
@@ -218,7 +221,7 @@ public class MzDecoder {
 	}
 
 	private void readSingleArchive(InputStream fin, int ti) throws IOException {
-		archive++;
+		archive.incrementAndGet();
 		DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(fin, 1024 * 1024 * 8)));
 		try {
 			while (true) {
@@ -240,8 +243,8 @@ public class MzDecoder {
 					FileInfo.setAttr(f, attr);
 					f.setLastModified(time);
 //					System.out.printf("[%d]%s\n", ti, name);
-					totalfile++;
-					totalbs += size;
+					totalfile.incrementAndGet();
+					totalbs.addAndGet(size);
 				} else if (type == 1) {
 					String name = in.readUTF();
 					extraFn = name + "(+)";
@@ -259,11 +262,11 @@ public class MzDecoder {
 						FileInfo.setAttr(f, attr);
 						f.setLastModified(time);
 					}
-					totalbs += len;
-					totalpartfile++;
+					totalbs.addAndGet(len);
+					totalpartfile.incrementAndGet();
 					if (start == 0) {
-						System.out.println(name + "(+)");
-						totalfile++;
+//						System.out.println(name + "(+)");
+						totalfile.incrementAndGet();
 					}
 				} else if (type == 2) {// dir
 					String name = in.readUTF();
@@ -277,14 +280,14 @@ public class MzDecoder {
 					// f.setLastModified(time);//it will be set if sub is set?
 					// System.out.printf("[d]set %s time to %s\n", f.getAbsoluteFile(), new
 					// Date(time));
-					totaldir++;
+					totaldir.incrementAndGet();
 				} else if (type == 3) {// soft
 					String name = in.readUTF();
 					String link = in.readUTF();
 					String attr = in.readUTF();
 					long time = in.readLong();
 					links.add(new Object[] { name, link, attr, time });
-					totalSoftLink++;
+					totalSoftLink.incrementAndGet();
 				} else if (type == 4) {// hard
 					String name = in.readUTF();
 					String link = in.readUTF();
@@ -299,7 +302,7 @@ public class MzDecoder {
 						f.getParentFile().mkdirs();
 						Files.createLink(f.toPath(), Path.of(link));
 					}
-					totalHardLink++;
+					totalHardLink.incrementAndGet();
 				} else if (type == -1) {
 					System.out.println("end of archive");
 					break;

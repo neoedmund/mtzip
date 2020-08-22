@@ -38,7 +38,8 @@ public class DecoderUI {
 		private JLabel jlst2;
 		private JCheckBox jcb1;
 		private MzDecoder dec;
-		private CheckMz check; 
+		private CheckMz check;
+
 		MainPanel(JFrame frame) {
 			dec = new MzDecoder();
 			check = new CheckMz();
@@ -66,15 +67,15 @@ public class DecoderUI {
 			lay.addComponent(jlst2 = new JLabel(" "));
 			lay.commitLine();
 			lay.addComponent(jb1 = new JButton("start"));
-			lay.addComponent(jcb1 = new JCheckBox("pause",false));
+			lay.addComponent(jcb1 = new JCheckBox("pause", false));
 			lay.commitLine();
 			jcb1.addActionListener(new ActionListener() {
-				
+
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					boolean p = jcb1.isSelected();
-					dec.pause=p;
-					check.pause=p;
+					dec.pause = p;
+					check.pause = p;
 				}
 			});
 			jb1.addActionListener(new ActionListener() {
@@ -99,7 +100,7 @@ public class DecoderUI {
 
 		protected void testMxz() {
 			final String from = jtf1.getText().trim();
-			
+
 			new Thread() {
 				public void run() {
 					try {
@@ -116,16 +117,18 @@ public class DecoderUI {
 					try {
 						// monitor
 						while (!check.finished) {
-							jlst1.setText(String.format("Checking files(part):%d(%d), dirs:%d, bytes:%d, archives:%d",
-									check.totalfile, check.totalpartfile, check.totaldir, check.totalbs,
-									check.archive));
+							jlst1.setText(String.format(
+									"Checking files(part):%,d(%,d), dirs:%,d, bytes:%,d, archives:%,d",
+									check.totalfile.longValue(), check.totalpartfile.longValue(),
+									check.totaldir.longValue(), check.totalbs.longValue(), check.archive.longValue()));
 							jlst2.setText(check.extraFn);
 							jlst1.repaint();
 							jlst2.repaint();
 							U.sleep(1000);
 						}
-						jlst1.setText(String.format("Checking files(part):%d(%d), dirs:%d, bytes:%d, archives:%d",
-								check.totalfile, check.totalpartfile, check.totaldir, check.totalbs, check.archive));
+						jlst1.setText(String.format("Checking files(part):%,d(%,d), dirs:%,d, bytes:%,d, archives:%,d",
+								check.totalfile.longValue(), check.totalpartfile.longValue(),
+								check.totaldir.longValue(), check.totalbs.longValue(), check.archive.longValue()));
 						jlst2.setText("Check finished!");
 						jlst1.repaint();
 						jlst2.repaint();
@@ -140,8 +143,7 @@ public class DecoderUI {
 		protected void decodeMxz() {
 			final String from = jtf1.getText().trim();
 			final String to = jtf2.getText().trim();
-		
-	
+
 			new Thread() {
 				public void run() {
 					try {
@@ -160,16 +162,18 @@ public class DecoderUI {
 						while (!dec.finished) {
 							long sec = (System.currentTimeMillis() - dec.t1) / 1000;
 							jlst1.setText(String.format(
-									"Extracted files(part):%d(%d), dirs:%d, bytes:%d, archives:%d, time:%,d sec",
-									dec.totalfile, dec.totalpartfile, dec.totaldir, dec.totalbs, dec.archive, sec));
+									"Extracted files(part):%,d(%,d), dirs:%,d, bytes:%,d, archives:%,d, time:%,d sec",
+									dec.totalfile.longValue(), dec.totalpartfile.longValue(), dec.totaldir.longValue(),
+									dec.totalbs.longValue(), dec.archive.longValue(), sec));
 							jlst2.setText(dec.extraFn);
 							jlst1.repaint();
 							jlst2.repaint();
 							U.sleep(1000);
 						}
 						jlst1.setText(
-								String.format("Total extracted files(part):%d(%d), dirs:%d, bytes:%d, archives:%d",
-										dec.totalfile, dec.totalpartfile, dec.totaldir, dec.totalbs, dec.archive));
+								String.format("Total extracted files(part):%,d(%,d), dirs:%,d, bytes:%,d, archives:%,d",
+										dec.totalfile.longValue(), dec.totalpartfile.longValue(),
+										dec.totaldir.longValue(), dec.totalbs.longValue(), dec.archive.longValue()));
 						long sec2 = (System.currentTimeMillis() - dec.t1) / 1000;
 						jlst2.setText(String.format("Extract finished! Used:%,d sec", sec2));
 						jlst1.repaint();

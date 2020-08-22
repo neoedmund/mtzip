@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 import neoe.util.U;
@@ -22,7 +24,8 @@ public class CheckMz {
 		new CheckMz().run(args[0]);
 	}
 
-	long totalfile = 0, totaldir = 0, totalpartfile = 0, totalbs = 0, archive = 0;
+	AtomicLong totalfile = new AtomicLong(0), totaldir = new AtomicLong(0), totalpartfile = new AtomicLong(0),
+			totalbs = new AtomicLong(0), archive = new AtomicLong(0);
 	boolean finished;
 	protected String extraFn;
 	protected boolean pause;
@@ -37,6 +40,8 @@ public class CheckMz {
 				String name2 = name + ".-";
 				File dir = U.confirmDir(f);
 				File[] fs = dir.listFiles();
+				Exception[] err = new Exception[1];
+				AtomicInteger errcnt = new AtomicInteger(0);
 				if (fs != null) {
 					List<Thread> ts = new ArrayList<Thread>();
 					int i = 0;
@@ -51,6 +56,8 @@ public class CheckMz {
 										run0(fxname);
 									} catch (IOException e) {
 										e.printStackTrace();
+										err[0] = e;
+										errcnt.incrementAndGet();
 									}
 								}
 							});
@@ -64,6 +71,10 @@ public class CheckMz {
 						for (Thread t : ts) {
 							t.join();
 						}
+						if (errcnt.get() > 0) {
+							throw new RuntimeException(String.format("have %d errors, like ", errcnt.get()), err[0]);
+						}
+						System.out.println("check finished");
 					}
 				}
 
@@ -89,9 +100,10 @@ public class CheckMz {
 			}
 
 			fin.close();
-			System.out.println(
-					String.format("end. total file:%d, total dir:%d, total bytes:%d, total part-file:%d, archive:%d",
-							totalfile, totaldir, totalbs, totalpartfile, archive));
+			System.out.println(String.format(
+					"end. total file:%,d, total dir:%,d, total bytes:%,d, total part-file:%,d, archive:%,d",
+					totalfile.longValue(), totaldir.longValue(), totalbs.longValue(), totalpartfile.longValue(),
+					archive.longValue()));
 		} finally {
 			finished = true;
 		}
@@ -123,7 +135,7 @@ public class CheckMz {
 	}
 
 	private void readSingleArchive(InputStream fin) throws IOException {
-		archive++;
+		archive.incrementAndGet();
 		DataInputStream in = new DataInputStream(new GZIPInputStream(fin));
 		try {
 			while (true) {
@@ -135,9 +147,9 @@ public class CheckMz {
 					String attr = in.readUTF();
 					long time = in.readLong();
 					U.safeskip(in, size);
-					System.out.println(name);
-					totalfile++;
-					totalbs += size;
+//					System.out.println(name);
+					totalfile.incrementAndGet();
+					totalbs.addAndGet(size);
 				} else if (type == 1) {
 					String name = in.readUTF();
 					extraFn = name + "(+)";
@@ -149,18 +161,18 @@ public class CheckMz {
 						long time = in.readLong();
 					}
 					U.safeskip(in, len);
-					totalbs += len;
-					totalpartfile++;
+					totalbs.addAndGet(len);
+					totalpartfile.incrementAndGet();
 					if (start == 0) {
-						System.out.println(name + "(+)");
-						totalfile++;
+//						System.out.println(name + "(+)");
+						totalfile.incrementAndGet();
 					}
 				} else if (type == 2) {
 					String name = in.readUTF();
 					String attr = in.readUTF();
 					long time = in.readLong();
 					extraFn = name;
-					totaldir++;
+					totaldir.incrementAndGet();
 				} else if (type == 3) {// soft
 					String name = in.readUTF();
 					String link = in.readUTF();
