@@ -2,22 +2,35 @@
 Story:
 Nowadays, We have multi-core CPU and random access SSD. Both are good at multi-threaded access.
 Compression algorithms are not deal well with multi-thread.
-But, When we compress many files, we still can do them multi-threaded for better performance.
+But, When we compress many files, we still can do them multi-threaded (in large scale aspect, not in algorithm aspect) for better performance.
 Here comes the MtZip.
 It's typically 12x times faster than gzip or even more.
 
 
 
-Usage of mtzip.cmd:
+Real performance example:
+On 24 threads CPU, M.2 SSD
+
+100 GB folder 
+ mz pack - 350 sec
+ mz unpack - 280 sec 
+ zip unpack -  1150 sec ( 4x slower)
+
+
+
+
+GUI:
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.EncoderUI
+java -Xmx1000M -cp dist/MtZip.jar neoe.mz.DecoderUI
+
+OR 
+command line using of mtzip.cmd:
  create archive: c <src-dir> <dest> <file-worker-cnt> <encode-worker-cnt>
  extract archive: x <src> <dest-dir>
  test archive: t <file>
  join archives(optional): j <file>
  create archive and join(c and j): cj <src-dir> <dest> <file-worker-cnt> <encode-worker-cnt>
 
-Other Uasages, GUI:
-java -Xmx1000M -cp dist/MtZip.jar neoe.mz.EncoderUI
-java -Xmx1000M -cp dist/MtZip.jar neoe.mz.DecoderUI
 
 eg.
 

@@ -22,11 +22,13 @@ public class FileInfo {
 	public long start;
 
 	public static String getAttr(File f) throws IOException {
+		if (C.isWindows)
+			return "";
 		return PosixFilePermissions.toString(Files.getPosixFilePermissions(f.toPath()));
 	}
 
 	public static void setAttr(File f, String attr) throws IOException {
-		if (C.isWindows)
+		if (C.isWindows || attr == null || attr.isEmpty())
 			return;
 		Files.setPosixFilePermissions(f.toPath(), PosixFilePermissions.fromString(attr));
 	}
